@@ -1,0 +1,7 @@
+Turn around time (TAT) = Completion time(CT) – Arrival time(AT)
+Wating Time(WT) = Turn around time (TAT) – Brust time(BT) 
+Respond Time(RT) = First time process get cpu – Arrival time(AT)
+
+FCFS---- First come first surve
+SJF-------shortest job first
+Rr ------ round robin
