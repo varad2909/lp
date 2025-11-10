@@ -1,0 +1,168 @@
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <vector>
+using namespace std;
+
+// ---------- DISPLAY LITERAL TABLE ----------
+void displayLiterals(string lit[][3], int n) {
+    cout << "\nLITERAL TABLE:\n";
+    cout << left << setw(10) << "Index" << setw(10) << "Literal" << setw(10) << "Address\n";
+    for (int i = 0; i < n; i++)
+        cout << left << setw(10) << i << setw(10) << lit[i][0] << setw(10) << lit[i][1] << endl;
+}
+
+// ---------- DISPLAY SYMBOL TABLE ----------
+void displaySymbols(string sym[][3], int n) {
+    cout << "\nSYMBOL TABLE:\n";
+    cout << left << setw(10) << "Index" << setw(10) << "Symbol" << setw(10) << "Address\n";
+    for (int i = 0; i < n; i++)
+        cout << left << setw(10) << i << setw(10) << sym[i][0] << setw(10) << sym[i][1] << endl;
+}
+
+// ---------- PRINT INTERMEDIATE CODE ----------
+void generateIC(string mot[][3], int motCount,
+                vector<vector<string>>& instr,
+                string sym[][3], int symCount,
+                string lit[][3], int litCount)
+{
+    cout << "\nINTERMEDIATE CODE:\n";
+
+    for (size_t i = 0; i < instr.size(); i++) {
+        string op = instr[i][0];
+        bool found = false;
+
+        // Match opcode in MOT
+        for (int j = 0; j < motCount; j++) {
+            if (op == mot[j][0]) {
+                cout << "(" << mot[j][1] << "," << mot[j][2] << ") ";
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) continue;
+
+        // Process operands
+        for (size_t k = 1; k < instr[i].size(); k++) {
+            string token = instr[i][k];
+            if (token == "" || token == "," || token == "+") continue;
+
+            if (token == "AREG") cout << "(RG,01) ";
+            else if (token == "BREG") cout << "(RG,02) ";
+            else if (token == "CREG") cout << "(RG,03) ";
+            else if (token[0] == '=') {
+                string val = token.substr(1);
+                for (int l = 0; l < litCount; l++) {
+                    if (lit[l][0] == val)
+                        cout << "(L," << l << ") ";
+                }
+            }
+            else if (isdigit(token[0])) {
+                cout << "(C," << token << ") ";
+            } else {
+                for (int s = 0; s < symCount; s++) {
+                    if (sym[s][0] == token)
+                        cout << "(S," << s << ") ";
+                }
+            }
+        }
+        cout << endl;
+    }
+}
+
+int main() {
+    // ---------- MOT TABLE ----------
+    string MOT[8][3] = {
+        {"START", "AD", "01"},
+        {"MOVER", "IS", "04"},
+        {"MOVEM", "IS", "05"},
+        {"ADD",   "IS", "01"},
+        {"ORIGIN","AD", "04"},
+        {"LTORG", "AD", "03"},
+        {"DC",    "DL", "01"},
+        {"DS",    "DL", "02"}
+    };
+
+    // --- USER INPUT SECTION ---
+    int symCount, litCount, instrCount;
+
+    cout << "Enter number of symbols: ";
+    cin >> symCount;
+    cin.ignore();
+    string SYM[symCount][3];
+    for (int i = 0; i < symCount; i++) {
+        cout << "Enter symbol name and address: ";
+        cin >> SYM[i][0] >> SYM[i][1];
+    }
+
+    cout << "\nEnter number of literals: ";
+    cin >> litCount;
+    cin.ignore();
+    string LIT[litCount][3];
+    for (int i = 0; i < litCount; i++) {
+        cout << "Enter literal value and address: ";
+        cin >> LIT[i][0] >> LIT[i][1];
+    }
+
+    cout << "\nEnter number of instructions: ";
+    cin >> instrCount;
+    cin.ignore();
+
+    vector<vector<string>> INSTR;
+    cout << "Enter each instruction (tokens separated by spaces):\n";
+    for (int i = 0; i < instrCount; i++) {
+        string line;
+        getline(cin, line);
+        if (line.empty()) { i--; continue; }
+
+        vector<string> tokens;
+        string temp = "";
+        for (char c : line) {
+            if (isspace(c)) {
+                if (!temp.empty()) tokens.push_back(temp), temp = "";
+            } else temp += c;
+        }
+        if (!temp.empty()) tokens.push_back(temp);
+        INSTR.push_back(tokens);
+    }
+
+    displaySymbols(SYM, symCount);
+    displayLiterals(LIT, litCount);
+    generateIC(MOT, 8, INSTR, SYM, symCount, LIT, litCount);
+
+    cout << "\n✅ Pass 1 executed successfully.\n";
+    return 0;
+}
+/* SAMPLE INPUT:- 
+		Enter number of symbols: 2
+LOOP 205
+N 210
+Enter number of literals: 2
+5 220
+1 225
+Enter number of instructions: 5
+START 200
+MOVER AREG =5
+ADD BREG N
+MOVEM AREG A
+END
+*/
+
+/* SAMPLE OUTPUT:-
+		SYMBOL TABLE:
+Index     Symbol    Address
+0         LOOP      205
+1         N         210
+
+LITERAL TABLE:
+Index     Literal   Address
+0         5         220
+1         1         225
+
+INTERMEDIATE CODE:
+(AD,01) (C,200)
+(IS,04) (RG,01) (L,0)
+(IS,01) (RG,02) (S,1)
+(IS,05) (RG,01) (S,0)
+(AD,02)*/

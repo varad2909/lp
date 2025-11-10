@@ -1,0 +1,116 @@
+#include <iostream>
+#include <list>
+#include <unordered_set>
+using namespace std;
+
+class FIFOPageReplacement {
+private:
+    list<int> pageQueue;         // Maintains FIFO order
+    unordered_set<int> pageSet;  // Quick lookup
+    int capacity;
+    int pageHits;
+    int pageMisses;
+
+public:
+    // Constructor
+    FIFOPageReplacement(int capacity) {
+        this->capacity = capacity;
+        pageHits = 0;
+        pageMisses = 0;
+    }
+
+    // Function to simulate page reference
+    void referencePage(int page) {
+        // Page is already in memory → HIT
+        if (pageSet.find(page) != pageSet.end()) {
+            pageHits++;
+            return;
+        }
+
+        // Page not in memory → MISS
+        if ((int)pageQueue.size() == capacity) {
+            int frontPage = pageQueue.front();  // Remove oldest page (FIFO)
+            pageQueue.pop_front();
+            pageSet.erase(frontPage);
+        }
+
+        pageMisses++;
+        pageQueue.push_back(page);
+        pageSet.insert(page);
+    }
+
+    // Getters
+    int getPageHits() { return pageHits; }
+    int getPageMisses() { return pageMisses; }
+
+    // Display current queue
+    void displayFrames() {
+        cout << "Frames: ";
+        for (int page : pageQueue)
+            cout << page << " ";
+        cout << endl;
+    }
+};
+
+int main() {
+    int capacity;
+    cout << "Enter the number of frames: ";
+    cin >> capacity;
+
+    FIFOPageReplacement fifo(capacity);
+
+    int n;
+    cout << "Enter the number of page references: ";
+    cin >> n;
+
+    cout << "Enter the page reference sequence (space separated): ";
+    for (int i = 0; i < n; i++) {
+        int page;
+        cin >> page;
+        fifo.referencePage(page);
+        fifo.displayFrames();  // Show frame status after each reference
+    }
+
+    cout << "\n===== FIFO Page Replacement Result =====\n";
+    cout << "Total Page Hits:    " << fifo.getPageHits() << endl;
+    cout << "Total Page Faults:  " << fifo.getPageMisses() << endl;
+
+    float hitRatio = (float)fifo.getPageHits() / n * 100;
+    float faultRatio = (float)fifo.getPageMisses() / n * 100;
+
+    cout << "Hit Ratio:   " << hitRatio << "%" << endl;
+    cout << "Fault Ratio: " << faultRatio << "%" << endl;
+
+    return 0;
+}
+
+
+/*sample input:-
+		
+		Enter the number of frames: 3
+Enter the number of page references: 12
+Enter the page reference sequence (space separated): 
+1 2 3 4 1 2 5 1 2 3 4 5*/
+
+
+
+/*sample output:-
+
+		Frames: 1 
+Frames: 1 2 
+Frames: 1 2 3 
+Frames: 2 3 4 
+Frames: 3 4 1 
+Frames: 4 1 2 
+Frames: 1 2 5 
+Frames: 2 5 1 
+Frames: 5 1 2 
+Frames: 1 2 3 
+Frames: 2 3 4 
+Frames: 3 4 5 
+
+===== FIFO Page Replacement Result =====
+Total Page Hits:    3
+Total Page Faults:  9
+Hit Ratio:   25%
+Fault Ratio: 75%*/

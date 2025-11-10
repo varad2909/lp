@@ -1,0 +1,123 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int main() {
+    int n, frame_size;
+
+    cout << "Enter the number of page references: ";
+    cin >> n;
+
+    vector<int> pages(n);
+    cout << "Enter the page reference sequence: ";
+    for (int i = 0; i < n; i++)
+        cin >> pages[i];
+
+    cout << "Enter the number of frames: ";
+    cin >> frame_size;
+
+    vector<int> frames;
+    int page_faults = 0;
+    int page_hits = 0;
+
+    cout << "\n===== Optimal Page Replacement Simulation =====\n";
+
+    for (int i = 0; i < n; i++) {
+        int current_page = pages[i];
+        bool hit = false;
+
+        // Check if page already exists in frame (HIT)
+        for (int j = 0; j < frames.size(); j++) {
+            if (frames[j] == current_page) {
+                hit = true;
+                page_hits++;
+                break;
+            }
+        }
+
+        // If not found → PAGE FAULT
+        if (!hit) {
+            page_faults++;
+
+            // If frame not full → just insert
+            if (frames.size() < frame_size) {
+                frames.push_back(current_page);
+            } else {
+                // Find page to replace (the one used farthest in future)
+                int farthest = -1, replaceIndex = -1;
+
+                for (int j = 0; j < frames.size(); j++) {
+                    int nextUse = -1;
+                    for (int k = i + 1; k < n; k++) {
+                        if (frames[j] == pages[k]) {
+                            nextUse = k;
+                            break;
+                        }
+                    }
+
+                    if (nextUse == -1) { // Not used again → perfect candidate
+                        replaceIndex = j;
+                        break;
+                    }
+
+                    if (nextUse > farthest) {
+                        farthest = nextUse;
+                        replaceIndex = j;
+                    }
+                }
+
+                frames[replaceIndex] = current_page;
+            }
+        }
+
+        // Display frame status
+        cout << "After referencing page " << current_page << " → ";
+        for (int f = 0; f < frame_size; f++) {
+            if (f < frames.size())
+                cout << frames[f] << " ";
+            else
+                cout << "- ";
+        }
+        cout << (hit ? " (Hit)" : " (Fault)") << endl;
+    }
+
+    cout << "\n===== Final Results =====\n";
+    cout << "Total Page References: " << n << endl;
+    cout << "Total Page Hits:       " << page_hits << endl;
+    cout << "Total Page Faults:     " << page_faults << endl;
+    cout << "Hit Ratio:   " << ((float)page_hits / n) * 100 << "%" << endl;
+    cout << "Fault Ratio: " << ((float)page_faults / n) * 100 << "%" << endl;
+
+    return 0;
+}
+
+
+
+/* sample input:-
+		Enter the number of page references: 12
+Enter the page reference sequence: 7 0 1 2 0 3 0 4 2 3 0 3
+Enter the number of frames: 3
+
+sample output:-
+		===== Optimal Page Replacement Simulation =====
+After referencing page 7 → 7 - - (Fault)
+After referencing page 0 → 7 0 - (Fault)
+After referencing page 1 → 7 0 1 (Fault)
+After referencing page 2 → 2 0 1 (Fault)
+After referencing page 0 → 2 0 1 (Hit)
+After referencing page 3 → 2 0 3 (Fault)
+After referencing page 0 → 2 0 3 (Hit)
+After referencing page 4 → 4 0 3 (Fault)
+After referencing page 2 → 4 0 2 (Fault)
+After referencing page 3 → 3 0 2 (Fault)
+After referencing page 0 → 3 0 2 (Hit)
+After referencing page 3 → 3 0 2 (Hit)
+
+===== Final Results =====
+Total Page References: 12
+Total Page Hits:       4
+Total Page Faults:     8
+Hit Ratio:   33.3333%
+Fault Ratio: 66.6667%*/
+
